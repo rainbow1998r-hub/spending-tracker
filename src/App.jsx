@@ -205,7 +205,7 @@ function EditSheet({ tx, trips, tripMeta, cats, onAddCat, onSave, onDelete, onCl
 }
 
 // ─── Add Transaction Sheet ────────────────────────────────────────────────────
-function AddSheet({ trips, tripMeta, cats, onAddCat, onSave, onClose }) {
+function AddSheet({ trips, tripMeta, cats, onAddCat, onSave, onClose, onUpload }) {
   const [f,setF] = useState({ desc:"", amount:"", cat:"Food & Dining", month:"May", card:"Amex", note:"", insuranceCovered:false, insurancePct:0, isShared:false, sharedWith:"", splitPct:100, isTravel:false, tripName:"" });
   const set = (k,v) => setF(p=>({...p,[k]:v}));
   const amt = parseFloat(f.amount)||0;
@@ -215,6 +215,11 @@ function AddSheet({ trips, tripMeta, cats, onAddCat, onSave, onClose }) {
 
   return (
     <Sheet onClose={onClose} title="Add Transaction">
+      {onUpload && (
+        <button onClick={()=>{onClose();onUpload();}} style={{ width:"100%", background:"#0e1825", border:"1px solid #1a3a5a", borderRadius:12, padding:"13px", fontSize:13, fontWeight:600, color:"#4ABBD9", cursor:"pointer", marginBottom:16, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+          📄 Upload PDF Statement instead
+        </button>
+      )}
       <label style={L}>Description</label>
       <input value={f.desc} onChange={e=>set("desc",e.target.value)} style={I} placeholder="e.g. Dinner at Eataly" />
       <label style={L}>Amount ($)</label>
@@ -909,7 +914,7 @@ export default function App() {
       <style>{globalCSS}</style>
       {toast && <Toast msg={toast} />}
       {editTx    && <EditSheet tx={editTx} trips={trips} tripMeta={tripMeta} cats={allCats} onAddCat={addCategory} onSave={saveTx} onDelete={deleteTx} onClose={()=>setEditTx(null)} />}
-      {showAdd   && <AddSheet  trips={trips} tripMeta={tripMeta} cats={allCats} onAddCat={addCategory} onSave={addTx} onClose={()=>setShowAdd(false)} />}
+      {showAdd   && <AddSheet  trips={trips} tripMeta={tripMeta} cats={allCats} onAddCat={addCategory} onSave={addTx} onClose={()=>setShowAdd(false)} onUpload={()=>setShowUpload(true)} />}
       {showUpload && <UploadSheet trips={trips} tripMeta={tripMeta} onAdd={addMany} onClose={()=>setShowUpload(false)} />}
 
       <div style={{ maxWidth:500, margin:"0 auto", padding:"20px 14px 0" }}>
