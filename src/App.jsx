@@ -918,6 +918,7 @@ export default function App() {
     .filter(t => activeTab==="travel" ? t.isTravel : !t.isTravel)
     .filter(t => filterCat==="All" || t.cat===filterCat)
     .filter(t => filterMonth==="All" || t.month===filterMonth)
+    .filter(t => activeTab!=="travel" || !tripFilter || t.tripName===tripFilter)
     .sort((a,b)=>{ const mi=MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month); return mi!==0?mi:parseInt(a.date.split(" ")[1])-parseInt(b.date.split(" ")[1]); });
 
   if (loading) return (
@@ -1021,7 +1022,7 @@ export default function App() {
 
             {tripCards.map(trip=>(
               <div key={trip.name} className="tcard" style={{ padding:"14px 16px", marginBottom:10, cursor:"pointer" }}
-                onClick={()=>{ setFilterCat("All"); setFilterMonth("All"); setActiveTab("travel"); setView("list"); }}>
+                onClick={()=>{ setFilterCat("All"); setFilterMonth("All"); setTripFilter(trip.name); setActiveTab("travel"); setView("list"); }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
                   <div>
                     <p style={{ fontSize:15, fontWeight:700 }}>{trip.emoji} {trip.name}</p>
@@ -1059,7 +1060,7 @@ export default function App() {
             <h2 style={{fontSize:18,fontWeight:700}}>Transactions</h2>
           </div>
           <div style={{ display:"flex", gap:4, background:"#14142a", borderRadius:10, padding:4, border:"1px solid #22224a", marginBottom:12 }}>
-            <button className={`tab-btn ${activeTab==="regular"?"on":""}`} onClick={()=>setActiveTab("regular")}>💳 Regular</button>
+            <button className={`tab-btn ${activeTab==="regular"?"on":""}`} onClick={()=>{ setActiveTab("regular"); setTripFilter(null); }}>💳 Regular</button>
             <button className={`tab-btn ${activeTab==="travel"?"ont":""}`}  onClick={()=>setActiveTab("travel")}>✈️ Travel</button>
           </div>
           <div style={{ display:"flex", gap:6, marginBottom:8, overflowX:"auto", paddingBottom:4 }}>
@@ -1067,6 +1068,22 @@ export default function App() {
               <button key={m} className="pill" style={{ background:filterMonth===m?"#6060ee":"#14142a", color:filterMonth===m?"#fff":"#666", border:`1px solid ${filterMonth===m?"#6060ee":"#22224a"}` }} onClick={()=>setFilterMonth(m)}>{m}</button>
             ))}
           </div>
+          {activeTab==="travel" && trips.length>0 && (
+            <div style={{ display:"flex", gap:6, marginBottom:8, overflowX:"auto", paddingBottom:4 }}>
+              {[null,...trips].map(tr=>{
+                const m = tr ? (tripMeta[tr]||{}) : {};
+                const active = tripFilter===tr;
+                const col = m.color||"#4ABBD9";
+                return (
+                  <button key={tr||"all"} className="pill"
+                    style={{ background:active?(col+"33"):"#14142a", color:active?col:"#666", border:`1px solid ${active?col:"#22224a"}`, whiteSpace:"nowrap" }}
+                    onClick={()=>setTripFilter(tr)}>
+                    {tr ? `${m.emoji||"✈️"} ${tr}` : "All Trips"}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div style={{ display:"flex", gap:6, marginBottom:12, overflowX:"auto", paddingBottom:4 }}>
             {["All",...Object.keys(allCats)].map(c=>(
               <button key={c} className="pill" style={{ background:filterCat===c?(allCats[c]?.color||"#6060ee"):"#14142a", color:filterCat===c?"#fff":"#666", border:`1px solid ${filterCat===c?(allCats[c]?.color||"#6060ee"):"#22224a"}` }} onClick={()=>setFilterCat(c)}>
