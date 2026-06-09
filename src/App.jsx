@@ -697,8 +697,11 @@ export default function App() {
                        "07":"Jul","08":"Aug","09":"Sep","10":"Oct","11":"Nov","12":"Dec"};
       function normalize(row) {
         const d = row.data;
-        // Already normalized
-        if (d.month && d.desc) return { ...d, id: d.id ?? row.id };
+        // Already normalized — ensure year field exists
+        if (d.month && d.desc) {
+          const yr = d.year || (["Jan","Feb","Mar","Apr","May","Jun","Jul"].includes(d.month) ? "2026" : "2025");
+          return { ...d, id: d.id ?? row.id, year: yr };
+        }
         // Convert from legacy import format {date:"2026-05-01", note, cat key, trip}
         const [yr, mm, dd] = (d.date || "").split("-");
         const month = MON_MAP[mm] || "Jan";
