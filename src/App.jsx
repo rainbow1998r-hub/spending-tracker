@@ -666,6 +666,7 @@ export default function App() {
   const [view, setView]         = useState("dashboard"); // dashboard | list | trips | chat
   const [activeTab, setActiveTab] = useState("regular");
   const [filterCat, setFilterCat] = useState("All");
+  const [filterYear, setFilterYear] = useState("All");
   const [filterMonth, setFilterMonth] = useState("All");
   const [tripFilter, setTripFilter] = useState(null);
   const [toast, setToast]       = useState(null);
@@ -699,13 +700,15 @@ export default function App() {
         // Already normalized
         if (d.month && d.desc) return { ...d, id: d.id ?? row.id };
         // Convert from legacy import format {date:"2026-05-01", note, cat key, trip}
-        const [, mm, dd] = (d.date || "").split("-");
+        const [yr, mm, dd] = (d.date || "").split("-");
         const month = MON_MAP[mm] || "Jan";
         const day   = dd ? parseInt(dd) : 1;
+        const year  = yr || "2026";
         return {
           id:               d.id ?? row.id,
           date:             `${month} ${day}`,
           month,
+          year,
           desc:             d.note || d.desc || "",
           amount:           d.amount || 0,
           effectiveAmount:  d.amount || 0,
@@ -914,12 +917,23 @@ export default function App() {
   const tripCards = trips.map((name,i)=>{ const m=tripMeta[name]||{}; const trs=travelTxs.filter(t=>t.tripName===name); return { name, color:m.color||TRIP_COLORS[i%TRIP_COLORS.length], emoji:m.emoji||TRIP_EMOJIS[i%TRIP_EMOJIS.length], total:trs.reduce((s,t)=>s+t.effectiveAmount,0), count:trs.length, months:[...new Set(trs.map(t=>t.month))].join(", ")||"—", txs:trs }; });
   const untaggedTravel = travelTxs.filter(t=>!t.tripName);
 
+  const allYears   = [...new Set(txs.map(t=>t.year).filter(Boolean))].sort();
+  const monthsForYear = filterYear==="All"
+    ? allMonths
+    : [...new Set(txs.filter(t=>t.year===filterYear).map(t=>t.month))].sort((a,b)=>MONTHS.indexOf(a)-MONTHS.indexOf(b));
+
   const listTxs = txs
     .filter(t => activeTab==="travel" ? t.isTravel : !t.isTravel)
+    .filter(t => filterYear==="All" || t.year===filterYear)
     .filter(t => filterCat==="All" || t.cat===filterCat)
     .filter(t => filterMonth==="All" || t.month===filterMonth)
     .filter(t => activeTab!=="travel" || !tripFilter || t.tripName===tripFilter)
-    .sort((a,b)=>{ const mi=MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month); return mi!==0?mi:parseInt(a.date.split(" ")[1])-parseInt(b.date.split(" ")[1]); });
+    .sort((a,b)=>{
+      const yi = (a.year||"0").localeCompare(b.year||"0");
+      if (yi!==0) return yi;
+      const mi = MONTHS.indexOf(a.month)-MONTHS.indexOf(b.month);
+      return mi!==0?mi:parseInt(a.date.split(" ")[1])-parseInt(b.date.split(" ")[1]);
+    });
 
   if (loading) return (
     <div style={{ fontFamily:"'DM Sans',system-ui,sans-serif", background:"#0c0c1e", minHeight:"100vh", color:"#e8e8f0", display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column", gap:12 }}>
@@ -1063,8 +1077,17 @@ export default function App() {
             <button className={`tab-btn ${activeTab==="regular"?"on":""}`} onClick={()=>{ setActiveTab("regular"); setTripFilter(null); }}>💳 Regular</button>
             <button className={`tab-btn ${activeTab==="travel"?"ont":""}`}  onClick={()=>setActiveTab("travel")}>✈️ Travel</button>
           </div>
+          {allYears.length>1 && (
+            <div style={{ display:"flex", gap:6, marginBottom:6, overflowX:"auto", paddingBottom:2 }}>
+              {["All",...allYears].map(y=>(
+                <button key={y} className="pill"
+                  style={{ background:filterYear===y?"#e8a838":"#14142a", color:filterYear===y?"#000":"#666", border:`1px solid ${filterYear===y?"#e8a838":"#22224a"}`, fontWeight:filterYear===y?700:400 }}
+                  onClick={()=>{ setFilterYear(y); setFilterMonth("All"); }}>{y}</button>
+              ))}
+            </div>
+          )}
           <div style={{ display:"flex", gap:6, marginBottom:8, overflowX:"auto", paddingBottom:4 }}>
-            {["All",...allMonths].map(m=>(
+            {["All",...monthsForYear].map(m=>(
               <button key={m} className="pill" style={{ background:filterMonth===m?"#6060ee":"#14142a", color:filterMonth===m?"#fff":"#666", border:`1px solid ${filterMonth===m?"#6060ee":"#22224a"}` }} onClick={()=>setFilterMonth(m)}>{m}</button>
             ))}
           </div>
