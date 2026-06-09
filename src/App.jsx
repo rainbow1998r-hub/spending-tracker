@@ -682,11 +682,46 @@ export default function App() {
   // ── Load from Supabase on mount ──
   useEffect(() => {
     async function load() {
-      const [{ data: txRows }, { data: metaRows }] = await Promise.all([
-        supabase.from("transactions").select("data").order("id", { ascending: false }),
+      const [{ data: txRows, error: txErr }, { data: metaRows }] = await Promise.all([
+        supabase.from("transactions").select("id, data").order("id", { ascending: false }),
         supabase.from("trip_meta").select("*"),
       ]);
-      if (txRows)   setTxs(txRows.map(r => r.data));
+      const CAT_MAP = {
+        food:"Food & Dining", groceries:"Groceries", transport:"Transportation",
+        shopping:"Shopping", health:"Health & Beauty", entertainment:"Entertainment",
+        travel:"Travel", bills:"Subscriptions", fitness:"Fitness & Wellness",
+        pets:"Shopping", beauty:"Health & Beauty",
+      };
+      const MON_MAP = {"01":"Jan","02":"Feb","03":"Mar","04":"Apr","05":"May","06":"Jun",
+                       "07":"Jul","08":"Aug","09":"Sep","10":"Oct","11":"Nov","12":"Dec"};
+      function normalize(row) {
+        const d = row.data;
+        // Already normalized
+        if (d.month && d.desc) return { ...d, id: d.id ?? row.id };
+        // Convert from legacy import format {date:"2026-05-01", note, cat key, trip}
+        const [, mm, dd] = (d.date || "").split("-");
+        const month = MON_MAP[mm] || "Jan";
+        const day   = dd ? parseInt(dd) : 1;
+        return {
+          id:               d.id ?? row.id,
+          date:             `${month} ${day}`,
+          month,
+          desc:             d.note || d.desc || "",
+          amount:           d.amount || 0,
+          effectiveAmount:  d.amount || 0,
+          cat:              CAT_MAP[d.cat] || d.cat || "Shopping",
+          card:             d.trip || d.card || "",
+          isTravel:         d.isTravel || false,
+          tripName:         d.tripName || "",
+          note:             d.note2 || "",
+          isShared:         false,
+          sharedWith:       "",
+          splitPct:         100,
+          insuranceCovered: false,
+          insurancePct:     0,
+        };
+      }
+      if (txRows)   setTxs(txRows.map(normalize));
       if (metaRows) setTripMeta(Object.fromEntries(metaRows.map(r => [r.name, { color: r.color, emoji: r.emoji }])));
       setLoading(false);
     }
