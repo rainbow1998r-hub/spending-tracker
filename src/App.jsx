@@ -877,6 +877,7 @@ export default function App() {
 
       // Execute actions
       let addedCount = 0;
+      const toSave = [];
       if (parsed.actions?.length) {
         parsed.actions.forEach(action => {
           if (action.type === "add_transaction") {
@@ -887,12 +888,17 @@ export default function App() {
               amount: parseFloat(t.amount)||0,
               effectiveAmount: 0, // recalculated below
               date: `${t.month} ${new Date().getDate()}`,
+              year: String(new Date().getFullYear()),
             };
             newTx.effectiveAmount = calcEffective(newTx);
             setTxs(ts => [newTx, ...ts]);
+            toSave.push(newTx);
             addedCount++;
           }
         });
+        if (toSave.length > 0) {
+          supabase.from("transactions").insert(toSave.map(tx => ({ id: tx.id, data: tx })));
+        }
       }
 
       setChatMsgs(m => [...m, { role:"assistant", text: parsed.reply || "Done!" }]);
