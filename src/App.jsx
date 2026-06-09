@@ -669,6 +669,7 @@ export default function App() {
   const [filterYear, setFilterYear] = useState("All");
   const [filterMonth, setFilterMonth] = useState("All");
   const [tripFilter, setTripFilter] = useState(null);
+  const [searchQ, setSearchQ] = useState("");
   const [toast, setToast]       = useState(null);
 
   const [chatMsgs, setChatMsgs]   = useState([
@@ -931,6 +932,7 @@ export default function App() {
     .filter(t => filterCat==="All" || t.cat===filterCat)
     .filter(t => filterMonth==="All" || t.month===filterMonth)
     .filter(t => activeTab!=="travel" || !tripFilter || t.tripName===tripFilter)
+    .filter(t => !searchQ || t.desc?.toLowerCase().includes(searchQ.toLowerCase()) || t.note?.toLowerCase().includes(searchQ.toLowerCase()))
     .sort((a,b)=>{
       const yi = (a.year||"0").localeCompare(b.year||"0");
       if (yi!==0) return yi;
@@ -1072,9 +1074,21 @@ export default function App() {
 
         {/* ════ LIST ════ */}
         {view==="list" && (<>
-          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
-            <button onClick={()=>{ setView("dashboard"); setFilterCat("All"); }} style={{ background:"none", border:"1px solid #33335a", color:"#888", cursor:"pointer", borderRadius:8, padding:"7px 12px", fontFamily:"inherit", fontSize:12 }}>← Back</button>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+            <button onClick={()=>{ setView("dashboard"); setFilterCat("All"); setSearchQ(""); }} style={{ background:"none", border:"1px solid #33335a", color:"#888", cursor:"pointer", borderRadius:8, padding:"7px 12px", fontFamily:"inherit", fontSize:12 }}>← Back</button>
             <h2 style={{fontSize:18,fontWeight:700}}>Transactions</h2>
+          </div>
+          <div style={{ position:"relative", marginBottom:12 }}>
+            <span style={{ position:"absolute", left:11, top:"50%", transform:"translateY(-50%)", fontSize:14, color:"#444", pointerEvents:"none" }}>🔍</span>
+            <input
+              value={searchQ}
+              onChange={e=>setSearchQ(e.target.value)}
+              placeholder="Search merchants, notes…"
+              style={{ width:"100%", boxSizing:"border-box", background:"#14142a", border:"1px solid #22224a", borderRadius:10, padding:"9px 12px 9px 32px", color:"#e8e8f0", fontSize:13, fontFamily:"inherit", outline:"none" }}
+            />
+            {searchQ && (
+              <button onClick={()=>setSearchQ("")} style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", color:"#555", cursor:"pointer", fontSize:16, lineHeight:1 }}>✕</button>
+            )}
           </div>
           <div style={{ display:"flex", gap:4, background:"#14142a", borderRadius:10, padding:4, border:"1px solid #22224a", marginBottom:12 }}>
             <button className={`tab-btn ${activeTab==="regular"?"on":""}`} onClick={()=>{ setActiveTab("regular"); setTripFilter(null); }}>💳 Regular</button>
