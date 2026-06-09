@@ -1036,7 +1036,7 @@ export default function App() {
 
             {tripCards.map(trip=>(
               <div key={trip.name} className="tcard" style={{ padding:"14px 16px", marginBottom:10, cursor:"pointer" }}
-                onClick={()=>{ setFilterCat("All"); setFilterMonth("All"); setTripFilter(trip.name); setActiveTab("travel"); setView("list"); }}>
+                onClick={()=>{ setFilterCat("All"); setFilterYear("All"); setFilterMonth("All"); setTripFilter(trip.name); setActiveTab("travel"); setView("list"); }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:10 }}>
                   <div>
                     <p style={{ fontSize:15, fontWeight:700 }}>{trip.emoji} {trip.name}</p>
@@ -1082,7 +1082,7 @@ export default function App() {
               {["All",...allYears].map(y=>(
                 <button key={y} className="pill"
                   style={{ background:filterYear===y?"#e8a838":"#14142a", color:filterYear===y?"#000":"#666", border:`1px solid ${filterYear===y?"#e8a838":"#22224a"}`, fontWeight:filterYear===y?700:400 }}
-                  onClick={()=>{ setFilterYear(y); setFilterMonth("All"); }}>{y}</button>
+                  onClick={()=>{ setFilterYear(y); setFilterMonth("All"); setTripFilter(null); }}>{y}</button>
               ))}
             </div>
           )}
@@ -1100,7 +1100,7 @@ export default function App() {
                 return (
                   <button key={tr||"all"} className="pill"
                     style={{ background:active?(col+"33"):"#14142a", color:active?col:"#666", border:`1px solid ${active?col:"#22224a"}`, whiteSpace:"nowrap" }}
-                    onClick={()=>setTripFilter(tr)}>
+                    onClick={()=>{ setTripFilter(tr); if(tr){ setFilterYear("All"); setFilterMonth("All"); } }}>
                     {tr ? `${m.emoji||"✈️"} ${tr}` : "All Trips"}
                   </button>
                 );
